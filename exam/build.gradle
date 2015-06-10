@@ -1,0 +1,180 @@
+paraStopPort = 8091      //jetty关闭端口
+paraHttpPort = 8090      //jettyhttp端口
+ctxPath = "comp-app"      //jettyRun contexPath参数
+warName = "comp-app"  //war包名字
+intHost = "localhost" //int环境host
+
+apply plugin: 'jetty'
+apply plugin: 'eclipse'
+
+def env = System.getenv("env") == null ?
+    System.getenv("ENVIRONMENT") : System.getenv("env");
+
+println "Start build " + warName
+println "Current module [comp-app] env=" + env
+println "Current module [comp-app] httpPort=" + paraHttpPort + " stopPort=" + paraStopPort
+println "Current module [comp-app] log home: " + System.getenv("app.log.home")
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+sourceSets {
+    main {
+        resources.srcDirs += 'src/main/webapp'
+    }
+    test {
+        resources.srcDirs += 'src/test/resources'
+    }
+}
+
+repositories {
+    mavenRepo urls: ["http://maven.lujs.cn/nexus/content/groups/public/"]
+    mavenCentral()
+}
+
+configurations {
+    emma
+}
+
+
+dependencies {
+    def spring_version = "3.0.5.RELEASE"
+    def spring = ["org.springframework:spring-core:$spring_version",
+            "org.springframework:spring-expression:$spring_version",
+            "org.springframework:spring-beans:$spring_version",
+            "org.springframework:spring-aop:$spring_version",
+            "org.springframework:spring-context:$spring_version",
+            "org.springframework:spring-web:$spring_version",
+            "org.springframework:spring-webmvc:$spring_version",
+            "org.springframework:spring-asm:$spring_version",
+            "org.springframework:spring-orm:$spring_version",
+            "org.springframework:spring-jdbc:$spring_version",
+            "org.springframework:spring-test:$spring_version",
+            "aopalliance:aopalliance:1.0"]
+
+    def jdbc = ["com.oracle:ojdbc:6.0","mysql:mysql-connector-java:5.1.34"]
+    def jersey_version = "1.8"
+    def jersey = ["javax.ws.rs:jsr311-api:1.1-ea",
+              "com.sun.jersey:jersey-core:$jersey_version",
+              "com.sun.jersey:jersey-server:$jersey_version",
+              "com.sun.jersey.contribs:jersey-spring:$jersey_version",
+              "com.sun.jersey:jersey-json:$jersey_version",
+              "com.sun.jersey:jersey-client:$jersey_version",
+              "javax.servlet:servlet-api:2.5"]
+
+    def jersey_test = ["com.sun.jersey:jersey-client:$jersey_version",
+        "com.sun.jersey.jersey-test-framework:jersey-test-framework-core:$jersey_version",
+        "com.sun.jersey.jersey-test-framework:jersey-test-framework-grizzly:$jersey_version",
+        "com.sun.jersey:jersey-grizzly:$jersey_version"]
+
+    def apache = ["commons-logging:commons-logging:1.1.1",
+            "commons-io:commons-io:2.0.1",
+            "commons-codec:commons-codec:1.5",
+            "commons-dbcp:commons-dbcp:1.4",
+            "commons-lang:commons-lang:2.6",
+            "commons-beanutils:commons-beanutils:1.8.3",
+            "org.apache.commons:commons-math3:3.4.1"]
+          
+    def jackson_version = "2.5.2"  
+    def jackson = [
+            "com.fasterxml.jackson.core:jackson-annotations:$jackson_version",
+            "com.fasterxml.jackson.core:jackson-core:$jackson_version",
+            "com.fasterxml.jackson.core:jackson-databind:$jackson_version"]
+            
+    def groovy = ["org.codehaus.groovy:groovy-all:2.2.2"]
+    def cglib = ["cglib:cglib:2.2"]
+    def servlet = ["javax.servlet:servlet-api:2.5"]
+    def gson = ["com.google.code.gson:gson:1.7.1"]
+    def log4j = ["log4j:log4j:1.2.16"]
+    def slf4j = ["org.slf4j:slf4j-log4j12:1.6.1"]
+
+    def ibatis_version = "2.3.5"
+    def ibatis = ["org.mybatis:mybatis:$ibatis_version"]
+
+    def joda = ["joda-time:joda-time:1.6.2"]
+    def quartz = ["opensymphony:quartz:1.6.1"]
+    
+    def unitils_version = "3.3.3-lufax"
+    def junit = ["junit:junit:4.8.2", "org.hamcrest:hamcrest-all:1.1","org.unitils:unitils-core:$unitils_version",
+            "org.powermock:powermock-api:1.4.12", "org.powermock:powermock-core:1.4.12", "org.powermock:powermock-module-junit4:1.4.12", "org.powermock:powermock-api-mockito:1.4.12",
+            ]
+
+    def emma_version = '2.1.5320'
+    def emmaGroup = ["emma:emma:$emma_version","emma:emma_ant:$emma_version"]
+    def cat = ["com.dianping.cat:cat-client:1.0.16"]
+    def kernel = ["com.lufax:kernel-core:0.2.16"]
+    def lufax = ["com.lufax:lufax-client-service:2.2.8"]
+    def elasticSearch = ["org.elasticsearch:elasticsearch:1.1.0"]
+
+    compile jdbc, spring, cglib, jersey, servlet, apache, gson, log4j, slf4j, ibatis, joda, groovy, quartz, cat, jackson, kernel, lufax, elasticSearch
+    testCompile jdbc, junit,jersey_test
+
+    emma emmaGroup
+}
+
+[compileJava]*.options*.encoding = 'UTF-8'
+
+test {
+    jvmArgs "-Demma.coverage.out.file=build/tmp/emma/metadata.emma", "-Demma.coverage.out.merge=true"
+
+    doFirst {
+        ant.taskdef(name: "emma", classname: "com.vladium.emma.emmaTask", classpath: configurations.emma.asPath)
+        ant.path(id: "run.classpath") {
+            pathelement(location:sourceSets.main.classesDir.absolutePath)
+        }
+        
+        def emmaInstDir = new File(sourceSets.main.classesDir.parentFile.parentFile, "tmp/emma/instr")
+        emmaInstDir.mkdirs()
+        ant.emma(enabled: 'true', verbosity:'info'){
+            instr(merge: "true", destdir: emmaInstDir.absolutePath, instrpathref: "run.classpath", metadatafile: 'build/tmp/emma/metadata.emma') {
+                instrpath {
+                    fileset(dir: sourceSets.main.classesDir.absolutePath, includes: "*.class")
+                }
+            }
+        }
+        
+        setClasspath(files("$buildDir/tmp/emma/instr") + configurations.emma + getClasspath())
+    }
+    doLast {
+        def srcDir = sourceSets.main.java.srcDirs.toArray()[0]
+        println "Creating test coverage reports for classes " + srcDir
+        
+        ant.emma(enabled: "true") {
+            report(sourcepath: srcDir) {
+                fileset(dir: "build/tmp/emma") {
+                    include(name: "*.emma")
+                }
+                txt(outfile: "build/reports/emma/coverage.txt")
+                html(outfile: "build/reports/emma/coverage.html")
+                xml(outfile: "build/reports/emma/coverage.xml")
+            }
+        }
+    }
+}
+
+
+war {
+    baseName = 'comp-app'
+    classpath = configurations.runtime.filter {
+        !it.name.contains("servlet-api") && !it.name.contains("grizzly-servlet-webserver") && !it.name.contains("javax.servlet-3.0.jar") // && !it.name.contains("ojdbc") && !it.name.contains("mysql-connector-java")
+    }
+    webInf {
+        into('classes') {
+            from sourceSets.main
+            exclude '**/' + warName + '.properties'
+            exclude '**/' + warName + '-env.properties'
+            exclude '**/log4j.properties'
+            exclude '**/elasticsearch.yml'
+        }
+    }
+
+    manifest {
+        attributes("Manifest-Version": "1.0",
+                "LAST_MODIFY_TIME": new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()))
+    }
+    
+}
+
+stopKey = 'stop-jetty'
+stopPort = paraStopPort
+httpPort = paraHttpPort
