@@ -1,0 +1,21 @@
+CREATE DATABASE IF NOT EXISTS recorder DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+ 
+use recorder;
+
+CREATE TABLE members (
+	ID INT unsigned NOT NULL AUTO_INCREMENT,
+	member_id VARCHAR (100) NOT NULL,
+	name VARCHAR (100) NOT NULL,
+	created_at DATETIME NOT NULL,
+	PRIMARY KEY (ID)
+);
+
+ CREATE TABLE records (
+	ID INT unsigned NOT NULL AUTO_INCREMENT,
+	member_id INT  NOT NULL,
+	data TEXT NOT NULL,
+	record_type VARCHAR (50) NOT NULL,
+	data_type VARCHAR (50) NOT NULL,
+	created_at DATETIME NOT NULL,
+	PRIMARY KEY (ID)
+);

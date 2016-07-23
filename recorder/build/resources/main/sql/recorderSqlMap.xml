@@ -1,0 +1,82 @@
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="recorder">
+
+	<typeAlias alias="record" type="com.billowsoft.recorder.bean.Record" />
+	<typeAlias alias="member" type="com.billowsoft.recorder.bean.Member" />
+
+	<resultMap id="recordResult" class="record">
+		<result property="id" column="ID" />
+		<result property="memberId" column="MEMBER_ID" />
+		<result property="data" column="DATA" />
+		<result property="type" column="RECORD_TYPE" />
+		<result property="dataType" column="DATA_TYPE" />
+		<result property="createdAt" column="CREATED_AT" />
+	</resultMap>
+	
+	<resultMap id="memberResult" class="member">
+		<result property="id" column="ID" />
+		<result property="memberId" column="MEMBER_ID" />
+		<result property="name" column="NAME" />
+		<result property="createdAt" column="CREATED_AT" />
+	</resultMap>
+
+	<select id="getRecordById" parameterClass="int" resultMap="recordResult" >
+		SELECT *
+		FROM
+			records
+		WHERE
+			id = #id#
+	</select>
+
+	<select id="getRecordsByMemberId" parameterClass="int" resultMap="recordResult">
+		SELECT *
+		FROM
+			records
+		WHERE
+			member_id = #id#
+	</select>
+
+	<select id="getLatestRecord" parameterClass="java.util.Map" resultMap="recordResult">
+		SELECT *
+		FROM
+			records
+		WHERE
+			member_id = #memberId# AND record_type = #type#
+		ORDER BY created_at DESC
+		LIMIT 1
+	</select>
+
+	<select id="getAllRecords" parameterClass="java.util.Map" resultMap="recordResult">
+		SELECT *
+		FROM
+			records
+		WHERE
+			member_id = #id#
+		ORDER BY created_at DESC
+	</select>	
+	
+	<select id="getMemberByName" parameterClass="java.lang.String" resultMap="memberResult">
+		SELECT *
+		FROM
+			members
+		WHERE
+			name = #name#
+	</select>
+	
+   <insert id="insertRecord" parameterClass="record">
+      insert into records(member_id, data, data_type, record_type, created_at)
+      values (#memberId#, #data#, #dataType#, #type#, #createdAt#)
+      <selectKey resultClass="int" keyProperty="id">
+         select last_insert_id() as id
+      </selectKey>
+   </insert> 
+   
+   <insert id="insertMember" parameterClass="member">
+      insert into members(member_id, name, created_at)
+      values (#memberId#, #name#, #createdAt#)
+      <selectKey resultClass="int" keyProperty="id">
+         select last_insert_id() as id
+      </selectKey>
+   </insert> 
+</sqlMap>

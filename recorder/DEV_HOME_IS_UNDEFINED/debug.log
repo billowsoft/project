@@ -1,0 +1,6 @@
+2016-06-19 15:34:11 - 开始响应请求：WeixinMsg [ToUserName=gh_98982168d478, FromUserName=ohMOLwFH0OqPEzcCPoNIgl_MViDE, CreateTime=1464527747, MsgType=text, MsgId=6290098777854619825, Content=测试]
+2016-06-19 15:34:12 - 创建record成功，id：25
+2016-06-19 15:34:12 - 结束响应请求：WeixinRecordResponse [fromUserName=ohMOLwFH0OqPEzcCPoNIgl_MViDE, toUserName=gh_98982168d478, msgType=text, content=记录已保存, createTime=1466321652290]
+2016-06-19 15:34:26 - 开始响应请求：WeixinMsg [ToUserName=gh_98982168d478, FromUserName=ohMOLwFH0OqPEzcCPoNIgl_MViDE, CreateTime=1464527747, MsgType=text, MsgId=6290098777854619825, Content=测试]
+2016-06-19 15:34:26 - 创建record成功，id：26
+2016-06-19 15:34:26 - 结束响应请求：WeixinRecordResponse [fromUserName=ohMOLwFH0OqPEzcCPoNIgl_MViDE, toUserName=gh_98982168d478, msgType=text, content=记录已保存, createTime=1466321666543]
